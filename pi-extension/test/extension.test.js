@@ -10,7 +10,6 @@ function createPiHarness() {
   const events = new Map();
   const commands = new Map();
   const appendedEntries = [];
-  const sentUserMessages = [];
 
   const pi = {
     on(eventName, handler) {
@@ -22,18 +21,14 @@ function createPiHarness() {
     appendEntry(customType, data) {
       appendedEntries.push({ customType, data });
     },
-    sendUserMessage(text, options) {
-      sentUserMessages.push({ text, options });
-    },
   };
 
   ponytailExtension(pi);
-  return { events, commands, appendedEntries, sentUserMessages };
+  return { events, commands, appendedEntries };
 }
 
 function createCommandContext(overrides = {}) {
   return {
-    isIdle: () => true,
     sessionManager: { getEntries: () => [] },
     ui: { notify() {} },
     ...overrides,
@@ -62,10 +57,10 @@ function withTempConfig(fn) {
     });
 }
 
-test("extension registers Ponytail commands", () => {
+test("extension registers only the core Ponytail command", () => {
   const { commands } = createPiHarness();
 
-  assert.deepEqual([...commands.keys()].sort(), ["ponytail", "ponytail-audit", "ponytail-debt", "ponytail-gain", "ponytail-help", "ponytail-review"]);
+  assert.deepEqual([...commands.keys()], ["ponytail"]);
 });
 
 test("/ponytail updates session mode and injects instructions", async () => withTempConfig(async () => {
@@ -199,37 +194,6 @@ test("OMP session_switch and session_branch restore the target session's mode", 
   }
   assert.deepEqual(appendedEntries, [], "restoring must not append a new mode entry");
 }));
-
-test("skill alias commands delegate to Pi skill commands", async () => {
-  const { commands, sentUserMessages } = createPiHarness();
-  const ctx = createCommandContext();
-
-  await commands.get("ponytail-review").handler("", ctx);
-  await commands.get("ponytail-audit").handler("", ctx);
-  await commands.get("ponytail-debt").handler("", ctx);
-  await commands.get("ponytail-gain").handler("", ctx);
-  await commands.get("ponytail-help").handler("", ctx);
-
-  assert.deepEqual(sentUserMessages.map((entry) => entry.text), [
-    "/skill:ponytail-review",
-    "/skill:ponytail-audit",
-    "/skill:ponytail-debt",
-    "/skill:ponytail-gain",
-    "/skill:ponytail-help",
-  ]);
-});
-
-test("skill alias commands expand the skill and forward their arguments", async () => {
-  const { commands, sentUserMessages } = createPiHarness();
-
-  await commands.get("ponytail-review").handler("staged", createCommandContext());
-  await commands.get("ponytail-audit").handler("src/api", createCommandContext({ isIdle: () => false }));
-
-  assert.deepEqual(sentUserMessages, [
-    { text: "/skill:ponytail-review staged", options: { expandPromptTemplates: true } },
-    { text: "/skill:ponytail-audit src/api", options: { expandPromptTemplates: true, deliverAs: "followUp" } },
-  ]);
-});
 
 test("normal mode disables persistent instructions", async () => withTempConfig(async () => {
   const { commands, events } = createPiHarness();

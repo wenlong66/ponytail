@@ -6,7 +6,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
+const path = require('path');
 const { NAMES, render, outPath, sourceBody, DESCRIPTIONS } = require('../scripts/build-openclaw-skills');
+
+test('OpenClaw generates and ships only the core ponytail skill', () => {
+  assert.deepEqual(NAMES, ['ponytail']);
+  const skillsDir = path.join(__dirname, '..', '.openclaw', 'skills');
+  assert.deepEqual(
+    fs.readdirSync(skillsDir)
+      .filter((name) => fs.existsSync(path.join(skillsDir, name, 'SKILL.md')))
+      .sort(),
+    ['ponytail'],
+  );
+});
 
 for (const name of NAMES) {
   test(`${name}: committed OpenClaw skill matches the generator`, () => {

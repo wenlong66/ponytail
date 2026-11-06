@@ -26,13 +26,19 @@ test("parsePonytailCommand parses modes, status, and default subcommand", () => 
   assert.deepEqual(parsePonytailCommand("default lite", "full"), { type: "set-default", mode: "lite" });
 });
 
-test("parsePonytailCommand rejects review as a default (session-only mode, #377)", () => {
-  assert.deepEqual(parsePonytailCommand("default review", "full"), { type: "invalid", reason: "invalid-default-mode" });
+test("parsePonytailCommand rejects removed skill modes", () => {
+  for (const mode of ["review", "help"]) {
+    assert.deepEqual(parsePonytailCommand(`default ${mode}`, "full"), { type: "invalid", reason: "invalid-default-mode" });
+    assert.deepEqual(parsePonytailCommand(mode, "full"), { type: "invalid", reason: "invalid-mode", mode });
+  }
 });
 
-test("resolveSessionMode still honors review as a session mode (not a default)", () => {
-  const entries = [{ type: "custom", customType: "ponytail-mode", data: { mode: "review" } }];
-  assert.equal(resolveSessionMode(entries, "full"), "review");
+test("resolveSessionMode ignores removed skill modes in persisted state", () => {
+  for (const mode of ["review", "help"]) {
+    const entries = [{ type: "custom", customType: "ponytail-mode", data: { mode } }];
+    assert.equal(resolveSessionMode(entries, "ultra"), "ultra");
+    assert.equal(resolveSessionMode(entries, mode), "full");
+  }
 });
 
 test("resolveSessionMode prefers latest persisted session mode", () => {

@@ -14,23 +14,12 @@ const path = require('path');
 const os = require('os');
 
 const DEFAULT_MODE = 'full';
-const VALID_MODES = ['off', 'lite', 'full', 'ultra', 'review'];
 const RUNTIME_MODES = ['off', 'lite', 'full', 'ultra'];
 
 function normalizeMode(mode) {
   if (typeof mode !== 'string') return null;
   const normalized = mode.trim().toLowerCase();
   return RUNTIME_MODES.includes(normalized) ? normalized : null;
-}
-
-function normalizeConfigMode(mode) {
-  if (typeof mode !== 'string') return null;
-  const normalized = mode.trim().toLowerCase();
-  return VALID_MODES.includes(normalized) ? normalized : null;
-}
-
-function normalizePersistedMode(mode) {
-  return normalizeMode(mode) || normalizeConfigMode(mode);
 }
 
 // "stop ponytail" / "normal mode" turn ponytail off, but only as a standalone
@@ -79,9 +68,7 @@ function getQoderDir() {
 
 function getDefaultMode() {
   // 1. Environment variable (highest priority)
-  // ponytail: a default must be a runtime level (off/lite/full/ultra); review is
-  // a session-only mode, never a valid default (#377). Normalize here so values
-  // with whitespace or mixed casing still resolve correctly.
+  // Normalize so values with whitespace or mixed casing still resolve correctly.
   const envMode = normalizeMode(process.env.PONYTAIL_DEFAULT_MODE);
   if (envMode) {
     return envMode;
@@ -139,7 +126,6 @@ function getHideStatus() {
 }
 
 function writeDefaultMode(mode) {
-  // ponytail: only a runtime level can be a default; review is session-only (#377).
   const normalized = normalizeMode(mode);
   if (!normalized) return null;
 
@@ -157,7 +143,6 @@ function writeDefaultMode(mode) {
 
 module.exports = {
   DEFAULT_MODE,
-  VALID_MODES,
   RUNTIME_MODES,
   getDefaultMode,
   getConfigDir,
@@ -168,8 +153,6 @@ module.exports = {
   getQuietStartup,
   isShellSafe,
   normalizeMode,
-  normalizeConfigMode,
-  normalizePersistedMode,
   isDeactivationCommand,
   writeDefaultMode,
 };

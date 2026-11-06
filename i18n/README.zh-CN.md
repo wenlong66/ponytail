@@ -72,6 +72,8 @@
 
 Ponytail 把他放进你的 AI 智能体里。
 
+此精简版仅保留 Ponytail 核心 token 缩减 skill、激活 hooks、模式跟踪、代码地图和简单的模式状态徽标。不包含信息栏、看板、运行时统计、指标账本、CSV/webhook 报告或会话导入；下方数据是历史离线 benchmark 结果。
+
 <a id="numbers"></a>
 ## 数据
 
@@ -96,36 +98,6 @@ Ponytail 把他放进你的 AI 智能体里。
 你要一个日期选择器。没有 Ponytail，智能体会安装一个日期选择器库，或者干脆手写一整个日历：335 行。Ponytail 5 会先看看已经有什么：仓库里有一个 `Input` 组件，而每个浏览器都自带日期选择器。它把这两样组合起来。10 行。
 
 更多幸存的例子见 [examples/](../examples/)。
-
-## 审查，从头重建
-
-<p align="center">
-  <img src="../assets/v5/review-zh-CN.png" width="880" alt="审查，从头重建。基准测试中一条真实的 /ponytail-review 发现：这次改动重命名了一个字段，结果一个没被改动的文件 src/routes/feed.js 现在会崩溃。必须修复：Atom feed 现在每次请求都会崩溃，并写明这是什么、问题在哪、怎么修、不修会怎样。预先埋入的问题 100% 被找到，无 skill 时 87%。diff 之外的问题 100% 被找到，无 skill 时 78%。">
-</p>
-
-`/ponytail-review` 以前只找可以删掉的代码。现在它像出了故障会被叫醒的资深开发者那样审查：它会读你的改动涉及的代码，而不只是 diff，并检查 bug、安全、真实负载、缺失的测试、速度，以及可以删掉的东西。每条发现都写清这段代码做什么、哪里出错、怎么修、不修会怎样。
-
-## 审计，从头重建
-
-<p align="center">
-  <img src="../assets/v5/audit-zh-CN.png" width="880" alt="整个仓库，按优先级排好。先修这个。基准测试中在一个仓储库存项目上真实运行的 /ponytail-audit：1 必须修复，数量写成 1,200 的办公室批次会完全失败；2 必须修复，导入时会悄悄跳过有问题的行；3 必须修复，办公室批次里打错的 SKU 会被悄悄忽略；4 应该修复，高风险的代码路径没有测试；5 锦上添花，请求体不是对象时 API 会崩溃。结论：先修 1。">
-</p>
-
-`/ponytail-audit` 对整个仓库做同样的检查。它先摸清代码的全貌：入口在哪、数据怎么流动、项目预计要承受多大负载。然后给发现的问题排好优先级，告诉你先修哪个。旧版审计只会列出可以删掉的东西。
-
-## 5.3 新功能：信息栏
-
-<p align="center">
-  <img src="../assets/band/band.png" width="880" alt="Claude Code 提示框上方的 ponytail 信息栏。详细模式：成本 $23.80，上一轮 $1.14，每轮平均 $0.72；token 56.7M，输出 168k，33 轮；智能体时间 52m 14s；复用 71%（复用 5 个，新写 2 个）；最后一次改动后测试通过。紧凑模式把同样的内容显示在一行里。">
-</p>
-
-在 Claude Code 中，ponytail 现在会在提示框上方显示一条信息栏：当前任务花了多少钱、用了多少 token 和智能体时间、有多少次复用了已有代码而不是写新代码，以及最后一次改动后测试是否通过。它的按钮可以切换级别、运行 `/ponytail-review` 或 `/ponytail-audit`、把任务复制为 Markdown，还能把信息栏折叠成一行。不想要它？`/ponytail band` 可以隐藏它，同一个命令会让它重新显示。需要 Claude Code 2.1.290 或更高版本，在终端或桌面应用中显示。在 VS Code 聊天面板、云端会话和 `claude -p` 中不会显示。
-
-<p align="center">
-  <img src="../assets/band/board.png" width="880" alt="ponytail 看板，一个本地页面：最近 30 天 61 个会话，智能体时间 20h 13m，$285.30，token 492.5M；各项目的智能体时间变化；最近的会话及其测试结果；活跃天数和连续天数。">
-</p>
-
-**Board** 会打开一个本地页面，汇总你所有项目的任务：随时间变化的成本、智能体时间和 token，每个会话及其测试结果，以及你工作过的日子。默认情况下，所有数据都留在你的电脑上，位于 `~/.config/ponytail/band/`。`/ponytail band import` 会把你以前的 Claude Code 会话连同成本、智能体时间和 token 一起加入看板。
 
 ## 工作原理
 
@@ -167,7 +139,7 @@ codex plugin add ponytail@ponytail
 
 就这些。他会很满意。但他不会说出来。
 
-每个会话都会启用，另外有几个命令（见[命令](#commands)）。`/ponytail ultra` 是为代码库把你个人惹毛了的时候准备的。启动和切换模式时会显示当前模式。
+每个会话都会启用，并可切换模式（见[命令](#commands)）。`/ponytail ultra` 是为代码库把你个人惹毛了的时候准备的。启动和切换模式时会显示当前模式。
 
 只从 GitHub 上的 `DietrichGebert/ponytail` 或 npm 上的 `@dietrichgebert/ponytail` 安装 ponytail。它从不包含 `.exe` 或 `.dll` 文件；包含这些文件的副本不是我的。
 
@@ -177,15 +149,9 @@ codex plugin add ponytail@ponytail
 | 命令 | 作用 |
 |------|------|
 | `/ponytail [lite \| full \| ultra \| off]` | 设置强度或关闭。不带参数时：如果已关闭，就以默认级别打开；否则显示当前级别。 |
-| `/ponytail band [on \| off]` | 仅限 Claude Code：隐藏或显示提示框上方的信息栏。不带参数时切换。级别不变。 |
-| `/ponytail band import` | 仅限 Claude Code：把以前的会话连同成本、智能体时间和 token 加入看板。 |
-| `/ponytail-review` | 像出了故障会被叫醒的资深开发者那样审查当前 diff：bug、安全、真实负载、没有测试的高风险代码、慢的地方，以及可以删掉的东西。每条发现都写清这段代码做什么、哪里出错、怎么修、不修会怎样。用普通的话指定目标来缩小或扩大范围：`uncommitted`、`staged`、`branch`，或一个 PR 链接。 |
-| `/ponytail-audit` | 对整个仓库做同样的检查，最重要的排在前面。 |
-| `/ponytail-debt` | 把你推迟处理的 `shortcut:` 捷径收集成一份清单，免得"以后再说"变成"永远不做"。 |
-| `/ponytail-gain` | 以计分板形式显示基准测试测得的效果（更少代码、更低成本、更快速度）。 |
-| `/ponytail-help` | 上述命令的速查表。 |
+| `/ponytail default <lite \| full \| ultra \| off>` | 在支持持久模式跟踪的宿主中设置新会话的默认级别。 |
 
-命令需要支持 skill 的宿主（Claude Code、Codex、Devin CLI、OpenCode、Gemini、Antigravity CLI、pi、Hermes Agent、Qoder、Grok Build）。在 Codex CLI 和 IDE 扩展中，它们是插件命名空间下的 skill，用 `$ponytail:ponytail-review` 调用。使用 [hooks](../INSTALL.md#cursor) 的 Cursor 只支持 `/ponytail` 级别切换，以普通消息输入。只有指令的适配器（Cursor 的规则文件、Windsurf、Cline、Copilot、Kiro、Antigravity 的 `AGENTS.md` 备用模式）会加载始终生效的规则，但没有这些命令。
+命令需要支持 skill 的宿主（Claude Code、Codex、Devin CLI、OpenCode、Gemini、Antigravity CLI、pi、Hermes Agent、Qoder、Grok Build）。在 Codex CLI 和 IDE 扩展中，它们是插件命名空间下的 skill，用 `$ponytail:ponytail` 调用。使用 [hooks](../INSTALL.md#cursor) 的 Cursor 只支持 `/ponytail` 级别切换，以普通消息输入。只有指令的适配器（Cursor 的规则文件、Windsurf、Cline、Copilot、Kiro、Antigravity 的 `AGENTS.md` 备用模式）会加载始终生效的规则，但没有这些命令。
 
 ## 常见问题
 
@@ -193,7 +159,7 @@ codex plugin add ponytail@ponytail
 不需要。可选的 `~/.config/ponytail/config.json` 或环境变量 `PONYTAIL_DEFAULT_MODE` 可以设置默认级别，但什么都不是必需的。
 
 **为什么它会写 `shortcut:` 注释？**
-它标记一个有意的捷径以及何时该回头处理，`/ponytail-debt` 会把它们收集成一份清单。想换个词，或者完全不要？在项目的 `CLAUDE.md` 或 `AGENTS.md` 里写明，然后运行 `/ponytail-debt <你的词>`。
+它标记一个有意的捷径以及何时该回头处理。想换个词，或者完全不要？在项目的 `CLAUDE.md` 或 `AGENTS.md` 里写明。
 
 **如果我真的需要那个 120 行的缓存类呢？**
 你不需要。非要的话，他也会写。慢慢地。正确地。一边看着你。

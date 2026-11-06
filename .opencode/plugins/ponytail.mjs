@@ -36,7 +36,6 @@ const statePath = path.join(
 
 function readMode() {
   try {
-    // review is a one-shot command, never a level (#736); an old saved review falls back.
     return normalizeMode(fs.readFileSync(statePath, 'utf8')) || getDefaultMode();
   } catch (e) {
     return getDefaultMode();
@@ -109,14 +108,6 @@ function readSkills() {
   }
 }
 
-// Templates without $ARGUMENTS would drop what the user typed after the
-// command (/ponytail-review feature/login), so append it instead.
-function withArguments(template, input) {
-  const text = String(input == null ? '' : input);
-  if (template.includes('$ARGUMENTS')) return template.replaceAll('$ARGUMENTS', text);
-  return text.trim() ? template + '\n\n' + text.trim() : template;
-}
-
 export default {
   id: 'ponytail',
 
@@ -139,7 +130,7 @@ export default {
             await ctx.session.prompt({
               ...prompt,
               sessionID,
-              text: withArguments(command.template, prompt.text),
+              text: command.template.replaceAll('$ARGUMENTS', String(prompt.text ?? '')),
               files: withoutMentions(prompt.files),
               agents: withoutMentions(prompt.agents),
               skills: withoutMentions(prompt.skills),

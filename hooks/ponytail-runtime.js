@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { createHash } = require('crypto');
-const { getClaudeDir, getQoderDir } = require('./ponytail-config');
+const { getClaudeDir, getQoderDir, normalizeMode } = require('./ponytail-config');
 
 const STATE_FILE = '.ponytail-active';
 
@@ -74,7 +74,7 @@ function clearMode() {
 // Live mode written by activate/mode-tracker. Absent flag = ponytail off.
 function readMode() {
   try {
-    return fs.readFileSync(projectStatePath || statePath, 'utf8').trim() || null;
+    return normalizeMode(fs.readFileSync(projectStatePath || statePath, 'utf8'));
   } catch (e) {
     return null;
   }

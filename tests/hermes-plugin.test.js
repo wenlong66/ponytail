@@ -11,9 +11,6 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { filterSkillBodyForMode } = require('../hooks/ponytail-instructions');
 
-const commands = ['ponytail', 'ponytail-review', 'ponytail-audit', 'ponytail-debt', 'ponytail-gain', 'ponytail-help'];
-const skillCommands = commands.filter((name) => name !== 'ponytail');
-
 const root = path.join(__dirname, '..');
 
 // ponytail: probe once; on Windows `python3` is the Store-alias stub that fails
@@ -59,13 +56,14 @@ test('Hermes plugin manifest matches runtime skills, hooks, commands, and packag
   assert.match(manifest, /^name:\s*ponytail$/m);
   assert.match(manifest, new RegExp(`^version:\\s*${packageJson.version}$`, 'm'));
   assert.match(manifest, new RegExp(`^author:\\s*${packageJson.author.name}$`, 'm'));
-  assert.deepEqual(commands.filter((name) => manifest.includes(`  - ${name}`)), commands);
-  assert.deepEqual(skillDirs.filter((name) => manifest.includes(`  - ${name}`)), skillDirs);
-  assert.match(manifest, /pre_llm_call/);
-  assert.match(manifest, /pre_gateway_dispatch/);
+  assert.deepEqual(skillDirs, ['ponytail']);
+  assert.deepEqual(
+    [...manifest.matchAll(/^  - (\S+)\r?$/gm)].map((match) => match[1]),
+    ['pre_llm_call', 'ponytail', 'ponytail'],
+  );
 });
 
-test('Hermes plugin registers every shipped skill under the ponytail namespace', () => {
+test('Hermes plugin registers only the core skill, command, and context hook', () => {
   const output = python(String.raw`
 import importlib.util, json, pathlib
 spec = importlib.util.spec_from_file_location('ponytail_hermes_plugin', '__init__.py')
@@ -87,18 +85,10 @@ mod.register(ctx)
 print(json.dumps({'skills': ctx.skills, 'hooks': ctx.hooks, 'commands': ctx.commands}, sort_keys=True))
 `);
   const data = JSON.parse(output);
-  assert.deepEqual(data.skills.map(([name]) => name).sort(), [
-    'ponytail',
-    'ponytail-audit',
-    'ponytail-debt',
-    'ponytail-gain',
-    'ponytail-help',
-    'ponytail-review',
-  ]);
+  assert.deepEqual(data.skills.map(([name]) => name), ['ponytail']);
   assert.ok(data.skills.every(([, skillPath]) => skillPath.endsWith('/SKILL.md')));
-  assert.ok(data.hooks.includes('pre_llm_call'));
-  assert.ok(data.commands.includes('ponytail'));
-  assert.ok(data.commands.includes('ponytail-review'));
+  assert.deepEqual(data.hooks, ['pre_llm_call']);
+  assert.deepEqual(data.commands, ['ponytail']);
 });
 
 test('Hermes plugin builds mode-aware injected context from the canonical skill', () => {
@@ -177,8 +167,8 @@ print(json.dumps(mod._pre_llm_call()))
   }
 });
 
-test('Hermes treats review as a command, never a level', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ponytail-review-default-'));
+test('Hermes falls back to the core default for removed review settings', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ponytail-invalid-default-'));
   fs.mkdirSync(path.join(tmp, 'ponytail'), { recursive: true });
   fs.writeFileSync(path.join(tmp, 'ponytail', 'config.json'), JSON.stringify({ defaultMode: 'review' }));
   const output = python(String.raw`
@@ -291,28 +281,6 @@ print(json.dumps({'nothing_persisted': nothing_persisted, 'off': off, 'still_off
   assert.match(data.back_on.context, /PONYTAIL MODE ACTIVE — level: full/);
 });
 
-test('Hermes gateway rewrite respects slash access denial', () => {
-  const output = python(String.raw`
-import importlib.util, json
-spec = importlib.util.spec_from_file_location('ponytail_hermes_plugin', '__init__.py')
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-class Source:
-    platform = None
-    chat_id = 'c1'
-    user_id = 'u1'
-class Event:
-    text = '/ponytail-review src/app.js'
-    source = Source()
-class Gateway:
-    def _check_slash_access(self, source, command):
-        return 'denied'
-result = mod.rewrite_gateway_command(event=Event(), gateway=Gateway())
-print(json.dumps(result))
-`);
-  assert.equal(output, 'null');
-});
-
 test('Hermes bare /ponytail switches an off session on and only reports a running level (#639)', () => {
   const output = python(String.raw`
 import importlib.util, json
@@ -331,29 +299,6 @@ print(json.dumps([running, kept, switched, mod._current_mode]))
   assert.equal(kept, 'ultra');
   assert.match(switched, /set to full/);
   assert.equal(after, 'full');
-});
-
-test('Hermes gateway rewrite preserves every skill command and ignores unrelated text', () => {
-  const output = python(String.raw`
-import importlib.util, json
-spec = importlib.util.spec_from_file_location('ponytail_hermes_plugin', '__init__.py')
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-class Event:
-    def __init__(self, text): self.text = text
-cases = {}
-for text in ['/ponytail-review x', '/ponytail_audit repo', '/ponytail-debt', '/ponytail-help', '/status', 'hello']:
-    cases[text] = mod.rewrite_gateway_command(event=Event(text))
-print(json.dumps(cases, sort_keys=True))
-`);
-  const data = JSON.parse(output);
-  assert.match(data['/ponytail-review x'].text, /ponytail-review/);
-  assert.match(data['/ponytail_audit repo'].text, /ponytail-audit/);
-  assert.match(data['/ponytail_audit repo'].text, /repo/);
-  assert.match(data['/ponytail-debt'].text, /ponytail-debt/);
-  assert.match(data['/ponytail-help'].text, /ponytail-help/);
-  assert.equal(data['/status'], null);
-  assert.equal(data.hello, null);
 });
 
 test('Hermes mode filter does not drop a rule bullet whose label matches a mode name', () => {

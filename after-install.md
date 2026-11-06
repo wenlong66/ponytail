@@ -13,10 +13,5 @@ In shared gateways, restrict `/ponytail` to trusted users with Hermes slash-comm
 Commands:
 
 - `/ponytail [lite|full|ultra|off]`
-- `/ponytail-review [target]`
-- `/ponytail-audit [target]`
-- `/ponytail-debt`
-- `/ponytail-gain`
-- `/ponytail-help`
 
-Bundled skills are available as `ponytail:ponytail`, `ponytail:ponytail-review`, `ponytail:ponytail-audit`, `ponytail:ponytail-debt`, `ponytail:ponytail-gain`, and `ponytail:ponytail-help`.
+The core skill is available as `ponytail:ponytail`. This slimmed build has no band UI, board, runtime statistics, metrics ledger, CSV/webhook reporting, or session import.

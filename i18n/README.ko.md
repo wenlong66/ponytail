@@ -72,6 +72,8 @@
 
 Ponytail은 그 사람을 당신의 AI 에이전트 안에 넣는다.
 
+이 슬림 버전은 토큰을 줄이는 Ponytail 핵심 스킬, 활성화 훅, 모드 추적, 코드 맵, 간단한 모드 배지만 유지한다. 밴드, 보드, 실행 중 통계, 메트릭 원장, CSV/webhook 보고, 세션 가져오기는 없다. 아래 수치는 과거 오프라인 벤치마크 결과다.
+
 <a id="numbers"></a>
 ## 수치
 
@@ -96,36 +98,6 @@ Ponytail은 그 사람을 당신의 AI 에이전트 안에 넣는다.
 날짜 선택기를 부탁한다. Ponytail이 없으면 에이전트는 날짜 선택기 라이브러리를 설치하거나, 달력 전체를 손으로 만든다: 335줄. Ponytail 5는 먼저 이미 있는 것을 본다: 저장소에는 `Input` 컴포넌트가 있고, 모든 브라우저에는 날짜 선택기가 있다. 그 둘을 합친다. 10줄.
 
 살아남은 예제는 [examples/](../examples/)에 더 있다.
-
-## 다시 만든 리뷰
-
-<p align="center">
-  <img src="../assets/v5/review-ko.png" width="880" alt="다시 만든 리뷰. 벤치마크에서 나온 실제 /ponytail-review 지적: 변경이 필드 이름을 바꿨고, 손대지 않은 파일 src/routes/feed.js가 이제 크래시가 난다. 반드시 고칠 것: 이제 Atom 피드가 요청마다 크래시가 난다. 이것이 무엇인지, 문제, 고치는 방법, 넘어가면 생기는 일까지 함께 적혀 있다. 심어 둔 문제 100% 발견, 스킬 없음 87%. diff 밖의 문제 100% 발견, 스킬 없음 78%.">
-</p>
-
-`/ponytail-review`는 원래 잘라 낼 코드만 찾았다. 이제는 장애가 나면 호출되는 시니어 개발자처럼 리뷰한다: diff만 보지 않고 변경이 닿는 코드까지 읽고, 버그, 보안, 실제 부하, 빠진 테스트, 속도, 잘라 낼 것을 확인한다. 지적마다 그 코드가 하는 일, 무엇이 잘못되는지, 고치는 방법, 고치지 않으면 생기는 일을 적는다.
-
-## 다시 만든 감사
-
-<p align="center">
-  <img src="../assets/v5/audit-ko.png" width="880" alt="저장소 전체를, 순위대로. 이것부터 고쳐라. 창고 재고 저장소에 벤치마크로 돌린 실제 /ponytail-audit: 1 반드시 고칠 것, 1,200이 들어간 사무실 배치가 통째로 실패한다. 2 반드시 고칠 것, 가져오기가 잘못된 행을 조용히 건너뛴다. 3 반드시 고칠 것, 사무실 배치에서 SKU를 잘못 입력하면 조용히 무시된다. 4 고치는 게 좋음, 위험한 코드 경로에 테스트가 없다. 5 있으면 좋음, 본문이 객체가 아니면 API가 크래시가 난다. 결론: 1번부터 고친다.">
-</p>
-
-`/ponytail-audit`는 같은 점검을 저장소 전체에 한다. 먼저 코드의 지도를 그린다: 진입점, 데이터가 흘러가는 길, 프로젝트가 예상하는 부하. 그다음 찾은 것에 순위를 매기고 무엇부터 고칠지 알려 준다. 예전 감사 기능은 지울 것만 나열했다.
-
-## 5.3의 새 기능: 밴드
-
-<p align="center">
-  <img src="../assets/band/band.png" width="880" alt="Claude Code 프롬프트 위의 ponytail 밴드. 자세히 보기: 비용 $23.80, 마지막 턴 $1.14, 턴당 평균 $0.72; 토큰 56.7M, 출력 168k, 33턴; 에이전트 시간 52m 14s; 재사용 71%, 5개 재사용, 2개 새로 작성; 마지막 변경 뒤 테스트 통과. 간단히 보기는 같은 내용을 한 줄로 보여 준다.">
-</p>
-
-이제 Claude Code에서 ponytail은 프롬프트 위에 밴드를 보여 준다: 지금 작업에 든 비용, 사용한 토큰과 에이전트 시간, 새 코드를 쓰는 대신 기존 코드를 얼마나 재사용했는지, 마지막 변경 뒤에 테스트가 통과했는지. 버튼으로 레벨을 바꾸고, `/ponytail-review`나 `/ponytail-audit`를 실행하고, 작업을 Markdown으로 복사하고, 밴드를 한 줄로 접을 수 있다. 필요 없다면 `/ponytail band`로 숨기고, 같은 명령으로 다시 켤 수 있다. Claude Code 2.1.290 이상이 필요하며, 터미널이나 데스크톱 앱에서 보인다. VS Code 채팅 패널, 클라우드 세션, `claude -p`에서는 보이지 않는다.
-
-<p align="center">
-  <img src="../assets/band/board.png" width="880" alt="ponytail 보드, 로컬 페이지: 최근 30일 동안 세션 61개, 에이전트 시간 20h 13m, $285.30, 토큰 492.5M; 프로젝트별 에이전트 시간 추이; 테스트 결과가 붙은 최근 세션; 활동한 날과 연속 기록.">
-</p>
-
-**Board**는 모든 프로젝트의 작업을 모은 로컬 페이지를 연다: 시간에 따른 비용, 에이전트 시간, 토큰, 테스트 결과가 붙은 세션 목록, 작업한 날. 기본 설정에서는 모든 데이터가 내 컴퓨터의 `~/.config/ponytail/band/`에만 남는다. `/ponytail band import`는 지난 Claude Code 세션을 비용, 에이전트 시간, 토큰과 함께 보드에 추가한다.
 
 ## 작동 방식
 
@@ -167,7 +139,7 @@ codex plugin add ponytail@ponytail
 
 이게 다다. 그 사람이라면 뿌듯해할 것이다. 말은 안 하겠지만.
 
-모든 세션에서 켜져 있고, 명령어가 몇 개 있다 ([명령어](#commands) 참고). `/ponytail ultra`는 코드베이스가 당신을 개인적으로 화나게 했을 때를 위한 것이다. 시작할 때와 모드를 바꿀 때 현재 모드가 표시된다.
+모든 세션에서 켜져 있고, 모드를 바꿀 수 있다 ([명령어](#commands) 참고). `/ponytail ultra`는 코드베이스가 당신을 개인적으로 화나게 했을 때를 위한 것이다. 시작할 때와 모드를 바꿀 때 현재 모드가 표시된다.
 
 ponytail은 GitHub의 `DietrichGebert/ponytail`이나 npm의 `@dietrichgebert/ponytail`에서만 설치한다. `.exe`나 `.dll` 파일은 절대 들어 있지 않다. 그런 파일이 들어 있는 사본은 내 것이 아니다.
 
@@ -177,15 +149,9 @@ ponytail은 GitHub의 `DietrichGebert/ponytail`이나 npm의 `@dietrichgebert/po
 | 명령어 | 하는 일 |
 |--------|---------|
 | `/ponytail [lite \| full \| ultra \| off]` | 강도를 정하거나 끈다. 인자 없이 쓰면, 꺼져 있을 때는 기본 레벨로 켜고, 켜져 있을 때는 현재 레벨을 알려 준다. |
-| `/ponytail band [on \| off]` | Claude Code 전용: 프롬프트 위의 밴드를 숨기거나 다시 보여 준다. 인자 없이 쓰면 전환한다. 레벨은 바뀌지 않는다. |
-| `/ponytail band import` | Claude Code 전용: 지난 세션을 비용, 에이전트 시간, 토큰과 함께 보드에 추가한다. |
-| `/ponytail-review` | 장애가 나면 호출되는 시니어 개발자처럼 현재 diff를 리뷰한다: 버그, 보안, 실제 부하, 테스트 없는 위험한 코드, 느린 부분, 지울 수 있는 것. 지적마다 그 코드가 하는 일, 무엇이 잘못되는지, 고치는 방법, 고치지 않으면 생기는 일을 적는다. 범위를 좁히거나 넓히려면 대상을 평범한 말로 적는다: `uncommitted`, `staged`, `branch`, 또는 PR 링크. |
-| `/ponytail-audit` | 같은 점검을 저장소 전체에 하고, 중요한 것부터 보여 준다. |
-| `/ponytail-debt` | 미뤄 둔 `shortcut:` 지름길을 목록으로 모아, "나중에"가 "절대 안 함"이 되지 않게 한다. |
-| `/ponytail-gain` | 벤치마크에서 측정한 효과(코드 감소, 비용 감소, 속도 향상)를 점수판으로 보여 준다. |
-| `/ponytail-help` | 위 명령어들의 빠른 참고. |
+| `/ponytail default <lite \| full \| ultra \| off>` | 모드를 지속적으로 추적하는 호스트에서 새 세션의 기본 레벨을 설정한다. |
 
-명령어는 스킬을 지원하는 호스트가 있어야 한다 (Claude Code, Codex, Devin CLI, OpenCode, Gemini, Antigravity CLI, pi, Hermes Agent, Qoder, Grok Build). Codex CLI와 IDE 확장에서는 플러그인 네임스페이스 아래의 스킬이므로 `$ponytail:ponytail-review`처럼 부른다. [훅](../INSTALL.md#cursor)을 쓰는 Cursor는 `/ponytail` 레벨 전환만 되고, 일반 메시지로 입력한다. 지시문만 쓰는 어댑터(Cursor 규칙 파일, Windsurf, Cline, Copilot, Kiro, Antigravity의 `AGENTS.md` 대체 모드)는 명령어 없이 항상 켜진 규칙만 불러온다.
+명령어는 스킬을 지원하는 호스트가 있어야 한다 (Claude Code, Codex, Devin CLI, OpenCode, Gemini, Antigravity CLI, pi, Hermes Agent, Qoder, Grok Build). Codex CLI와 IDE 확장에서는 플러그인 네임스페이스 아래의 스킬이므로 `$ponytail:ponytail`처럼 부른다. [훅](../INSTALL.md#cursor)을 쓰는 Cursor는 `/ponytail` 레벨 전환만 되고, 일반 메시지로 입력한다. 지시문만 쓰는 어댑터(Cursor 규칙 파일, Windsurf, Cline, Copilot, Kiro, Antigravity의 `AGENTS.md` 대체 모드)는 명령어 없이 항상 켜진 규칙만 불러온다.
 
 ## 자주 묻는 질문
 
@@ -193,7 +159,7 @@ ponytail은 GitHub의 `DietrichGebert/ponytail`이나 npm의 `@dietrichgebert/po
 아니다. 선택 사항인 `~/.config/ponytail/config.json`이나 `PONYTAIL_DEFAULT_MODE` 환경 변수로 기본 레벨을 정할 수 있지만, 필요한 것은 없다.
 
 **왜 `shortcut:` 주석을 쓰나?**
-의도한 지름길과 언제 다시 볼지를 표시하고, `/ponytail-debt`가 이를 목록으로 모은다. 다른 단어를 쓰거나 아예 빼고 싶다면? 프로젝트의 `CLAUDE.md`나 `AGENTS.md`에 그렇게 적고, `/ponytail-debt <원하는 단어>`를 실행하면 된다.
+의도한 지름길과 언제 다시 볼지를 표시한다. 다른 단어를 쓰거나 아예 빼고 싶다면? 프로젝트의 `CLAUDE.md`나 `AGENTS.md`에 그렇게 적으면 된다.
 
 **120줄짜리 캐시 클래스가 정말 필요하면?**
 필요 없다. 그래도 고집하면 만들어 준다. 천천히. 정확하게. 당신을 쳐다보면서.

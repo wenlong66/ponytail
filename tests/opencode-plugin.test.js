@@ -81,13 +81,10 @@ function setupV2(overrides = {}) {
   return loadPlugin.setup(ctx).then(() => ({ added, prompts, hooks }));
 }
 
-test('V2 setup registers all six commands and all six skills', async () => {
+test('V2 setup registers only the core command and skill', async () => {
   const { added } = await setupV2();
-  assert.deepEqual(
-    added.commands.map((c) => c.name).sort(),
-    ['ponytail', 'ponytail-audit', 'ponytail-debt', 'ponytail-gain', 'ponytail-help', 'ponytail-review'],
-  );
-  assert.equal(added.skills.length, 6);
+  assert.deepEqual(added.commands.map((c) => c.name), ['ponytail']);
+  assert.deepEqual(added.skills.map((s) => s.id), ['ponytail']);
   for (const skill of added.skills) {
     // V2 rejects a skill without these (Skill.Info: id, name, path, content).
     assert.ok(skill.id && skill.name && skill.path && skill.content, `incomplete skill ${skill.id}`);
@@ -126,25 +123,12 @@ test('V2 commands keep attachments without offsets into the replaced prompt text
     agents: [{ name: 'reviewer', mention: { start: 0, end: 9 } }],
     skills: [{ name: 'test', mention: { start: 0, end: 9 } }],
   };
-  await added.commands['ponytail-review'].execute({ sessionID: 's', prompt, delivery: 'steer' });
+  await added.commands.ponytail.execute({ sessionID: 's', prompt, delivery: 'steer' });
   assert.notEqual(prompts[0].text, prompt.text);
   assert.deepEqual(prompts[0].files, [{ path: 'src/a.ts' }]);
   assert.deepEqual(prompts[0].agents, [{ name: 'reviewer' }]);
   assert.deepEqual(prompts[0].skills, [{ name: 'test' }]);
   assert.deepEqual(prompt.files[0].mention, { start: 0, end: 9 }, 'original input is unchanged');
-});
-
-test('V2 command without $ARGUMENTS appends the typed input instead of dropping it (#1087)', async () => {
-  const { added, prompts } = await setupV2();
-  assert.ok(added.commands['ponytail-review'], 'ponytail-review is registered');
-  await added.commands['ponytail-review'].execute({ sessionID: 's', prompt: { text: ' feature/login ' }, delivery: 'steer' });
-  await added.commands['ponytail-review'].execute({ sessionID: 's', prompt: { text: '  ' }, delivery: 'steer' });
-  await added.commands['ponytail-review'].execute({ sessionID: 's', prompt: {}, delivery: 'steer' });
-  const [withInput, blank, missing] = prompts.map((p) => p.text);
-  assert.ok(withInput.endsWith('\n\nfeature/login'), 'input appended, trimmed');
-  assert.equal(withInput.slice(0, -'\n\nfeature/login'.length), blank, 'blank input leaves the template unchanged');
-  assert.equal(missing, blank);
-  assert.ok(!blank.includes('$ARGUMENTS'));
 });
 
 test('V2 context hook injects the ruleset, and stays silent when off', async () => {
@@ -217,6 +201,14 @@ test('V1 and V2 share one mode file, so a level set under either API applies to 
 });
 
 // ---------------------------------------------------------------- V1 ------
+
+test('V1 config registers only the core command and shared skill directory', async () => {
+  const hooks = await loadPlugin.server({});
+  const config = {};
+  await hooks.config(config);
+  assert.deepEqual(Object.keys(config.command), ['ponytail']);
+  assert.deepEqual(config.skills.paths, [path.join(__dirname, '..', 'skills')]);
+});
 
 function transform(hooks) {
   const output = { system: [] };

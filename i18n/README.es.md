@@ -72,6 +72,8 @@ Ya lo conoces. Coleta larga. Gafas ovaladas. Lleva en la empresa más tiempo que
 
 Ponytail lo mete dentro de tu agente de IA.
 
+Esta versión reducida conserva solo el skill principal de Ponytail para reducir tokens, los hooks de activación, el seguimiento del modo, el mapa de código y el indicador simple del modo. No incluye barra, board, estadísticas de ejecución, registro de métricas, informes CSV/webhook ni importación de sesiones; las cifras de abajo son benchmarks históricos offline.
+
 <a id="numbers"></a>
 ## Números
 
@@ -96,36 +98,6 @@ Dos cosas que el gráfico no muestra: en una comparación a ciegas, las respuest
 Pides un selector de fechas. Sin Ponytail, el agente instala una librería de selector de fechas o construye un calendario entero a mano: 335 líneas. Ponytail 5 primero mira lo que ya hay: el repo tiene un componente `Input`, y todos los navegadores traen un selector de fechas. Junta las dos cosas. 10 líneas.
 
 Más supervivientes en [examples/](../examples/).
-
-## La revisión, reconstruida
-
-<p align="center">
-  <img src="../assets/v5/review-es.png" width="880" alt="La revisión, reconstruida. Un hallazgo real de /ponytail-review en el benchmark: el cambio renombró un campo, y un archivo que nadie tocó, src/routes/feed.js, ahora se cae. Hay que arreglarlo: el feed Atom ahora se cae en cada petición, con qué es esto, el problema, el arreglo y qué pasa si no se arregla. Encuentra el 100% de los problemas plantados, sin skill el 87%. Encuentra el 100% de los problemas fuera del diff, sin skill el 78%.">
-</p>
-
-`/ponytail-review` antes solo buscaba código que recortar. Ahora revisa como el dev senior al que llaman cuando algo se rompe: lee el código que toca tu cambio, no solo el diff, y revisa bugs, seguridad, carga real, tests que faltan, velocidad y lo que sobra. Cada hallazgo dice qué hace el código, qué falla, cómo arreglarlo y qué pasa si no lo arreglas.
-
-## La auditoría, reconstruida
-
-<p align="center">
-  <img src="../assets/v5/audit-es.png" width="880" alt="Todo tu repo, por orden de prioridad. Arregla esto primero. Un /ponytail-audit real del benchmark sobre un repo de stock de almacén: 1 hay que arreglarlo, los lotes de oficina de 1200 fallan por completo; 2 hay que arreglarlo, la importación se salta en silencio las filas erróneas; 3 hay que arreglarlo, un SKU mal escrito en un lote de oficina se ignora en silencio; 4 conviene arreglarlo, las partes arriesgadas del código no tienen tests; 5 estaría bien, la API se cae con un body que no es un objeto. Veredicto: arregla primero el 1.">
-</p>
-
-`/ponytail-audit` hace las mismas comprobaciones en todo el repo. Primero hace un mapa del código: puntos de entrada, cómo se mueven los datos, qué carga espera el proyecto. Después ordena lo que encuentra por prioridad y te dice qué arreglar primero. La auditoría anterior solo listaba lo que había que borrar.
-
-## Nuevo en 5.3: la barra
-
-<p align="center">
-  <img src="../assets/band/band.png" width="880" alt="La barra de ponytail en Claude Code, encima del prompt. Modo detalle: coste $23.80, último turno $1.14, media $0.72 por turno; 56.7M tokens, 168k de salida, 33 turnos; tiempo de agente 52m 14s; reutilización 71%, 5 usados, 2 nuevos; tests pasados después del último cambio. El modo compacto muestra lo mismo en una línea.">
-</p>
-
-En Claude Code, ponytail ahora muestra una barra encima del prompt: cuánto cuesta la tarea actual, cuántos tokens y cuánto tiempo de agente ha usado, cuántas veces reutilizó código existente en lugar de escribir código nuevo y si los tests pasaron después del último cambio. Sus botones cambian el nivel, lanzan `/ponytail-review` o `/ponytail-audit`, copian la tarea como Markdown y pliegan la barra en una sola línea. ¿No la quieres? `/ponytail band` la oculta, y el mismo comando la vuelve a mostrar. Necesita Claude Code 2.1.290 o posterior, en la terminal o en la app de escritorio. No aparece en el panel de chat de VS Code, en sesiones en la nube ni con `claude -p`.
-
-<p align="center">
-  <img src="../assets/band/board.png" width="880" alt="El board de ponytail, una página local: 61 sesiones, 20h 13m de tiempo de agente, $285.30 y 492.5M tokens en los últimos 30 días; tiempo de agente por proyecto a lo largo del tiempo; las últimas sesiones con sus tests; días activos y racha.">
-</p>
-
-**Board** abre una página local con todas las tareas de tus proyectos: coste, tiempo de agente y tokens a lo largo del tiempo, cada sesión con sus tests y los días que trabajaste. Por defecto, todo se queda en tu máquina, en `~/.config/ponytail/band/`. `/ponytail band import` añade tus sesiones anteriores de Claude Code al board, con su coste, tiempo de agente y tokens.
 
 ## Cómo funciona
 
@@ -167,7 +139,7 @@ Después abre `/hooks` en Codex, confía en sus dos hooks de ciclo de vida y emp
 
 Eso era todo. Estaría orgulloso. No lo va a decir.
 
-Activo en cada sesión, con un puñado de comandos (ver [Comandos](#commands)). `/ponytail ultra` existe para cuando el código te ha ofendido personalmente. El texto de inicio y de cambio de modo muestra el modo actual.
+Activo en cada sesión, con controles de modo (ver [Comandos](#commands)). `/ponytail ultra` existe para cuando el código te ha ofendido personalmente. El texto de inicio y de cambio de modo muestra el modo actual.
 
 Instala ponytail solo desde `DietrichGebert/ponytail` en GitHub o `@dietrichgebert/ponytail` en npm. Nunca incluye archivos `.exe` ni `.dll`; una copia que los incluya no es mía.
 
@@ -177,15 +149,9 @@ Instala ponytail solo desde `DietrichGebert/ponytail` en GitHub o `@dietrichgebe
 | Comando | Qué hace |
 |---------|----------|
 | `/ponytail [lite \| full \| ultra \| off]` | Ajusta la intensidad o lo apaga. Sin argumento enciende ponytail en el nivel por defecto si está apagado; si no, muestra el nivel actual. |
-| `/ponytail band [on \| off]` | Solo en Claude Code: oculta o muestra la barra encima del prompt. Sin argumento la alterna. El nivel no cambia. |
-| `/ponytail band import` | Solo en Claude Code: añade tus sesiones anteriores al board, con coste, tiempo de agente y tokens. |
-| `/ponytail-review` | Revisa el diff actual como el dev senior al que llaman cuando algo se rompe: bugs, seguridad, carga real, código arriesgado sin test, partes lentas y lo que sobra. Cada hallazgo dice qué hace el código, qué falla, cómo arreglarlo y qué pasa si no se arregla. Indica un objetivo con palabras normales para acotarlo o ampliarlo: `uncommitted`, `staged`, `branch` o un enlace a un PR. |
-| `/ponytail-audit` | La misma revisión para todo el repo, lo más importante primero. |
-| `/ponytail-debt` | Reúne los atajos `shortcut:` que dejaste para después en un registro, para que "luego" no se convierta en "nunca". |
-| `/ponytail-gain` | Muestra el marcador de impacto medido (menos código, menos coste, más velocidad) del benchmark. |
-| `/ponytail-help` | Referencia rápida de los comandos anteriores. |
+| `/ponytail default <lite \| full \| ultra \| off>` | Fija el nivel por defecto para nuevas sesiones en hosts con seguimiento persistente del modo. |
 
-Los comandos necesitan un host con soporte de skills (Claude Code, Codex, Devin CLI, OpenCode, Gemini, Antigravity CLI, pi, Hermes Agent, Qoder, Grok Build). En Codex CLI y en la extensión del IDE son skills dentro del espacio de nombres del plugin; se invocan con `$ponytail:ponytail-review`. Cursor con los [hooks](../INSTALL.md#cursor) solo tiene el cambio de nivel con `/ponytail`, escrito como mensaje normal. Los adaptadores de solo instrucciones (el archivo de reglas de Cursor, Windsurf, Cline, Copilot, Kiro, el modo alternativo de Antigravity con `AGENTS.md`) cargan las reglas siempre activas, sin los comandos.
+Los comandos necesitan un host con soporte de skills (Claude Code, Codex, Devin CLI, OpenCode, Gemini, Antigravity CLI, pi, Hermes Agent, Qoder, Grok Build). En Codex CLI y en la extensión del IDE son skills dentro del espacio de nombres del plugin; se invocan con `$ponytail:ponytail`. Cursor con los [hooks](../INSTALL.md#cursor) solo tiene el cambio de nivel con `/ponytail`, escrito como mensaje normal. Los adaptadores de solo instrucciones (el archivo de reglas de Cursor, Windsurf, Cline, Copilot, Kiro, el modo alternativo de Antigravity con `AGENTS.md`) cargan las reglas siempre activas, sin los comandos.
 
 ## Preguntas frecuentes
 
@@ -193,7 +159,7 @@ Los comandos necesitan un host con soporte de skills (Claude Code, Codex, Devin 
 No. Un `~/.config/ponytail/config.json` opcional o la variable de entorno `PONYTAIL_DEFAULT_MODE` pueden fijar el nivel por defecto, pero no hace falta nada.
 
 **¿Por qué escribe comentarios `shortcut:`?**
-Marcan un atajo deliberado y cuándo revisarlo, y `/ponytail-debt` los reúne en un registro. ¿Quieres otra palabra, o ninguna? Dilo en el `CLAUDE.md` o `AGENTS.md` de tu proyecto y luego ejecuta `/ponytail-debt <tu palabra>`.
+Marcan un atajo deliberado y cuándo revisarlo. ¿Quieres otra palabra, o ninguna? Dilo en el `CLAUDE.md` o `AGENTS.md` de tu proyecto.
 
 **¿Y si de verdad necesito la clase de caché de 120 líneas?**
 No la necesitas. Insiste de todos modos y te la construye. Despacio. Correctamente. Mirándote.

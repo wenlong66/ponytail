@@ -8,7 +8,6 @@ const {
   getQuietStartup,
   getHideStatus,
   normalizeMode,
-  normalizePersistedMode,
   isDeactivationCommand,
   writeDefaultMode,
 } = require("../hooks/ponytail-config.js");
@@ -30,14 +29,14 @@ export function completePonytailArgs(prefix) {
 }
 
 export function resolveSessionMode(entries, fallbackMode = DEFAULT_MODE) {
-  const fallback = normalizePersistedMode(fallbackMode) || DEFAULT_MODE;
+  const fallback = normalizeMode(fallbackMode) || DEFAULT_MODE;
   if (!Array.isArray(entries)) return fallback;
 
   for (let i = entries.length - 1; i >= 0; i -= 1) {
     const entry = entries[i];
     if (entry?.type !== "custom" || entry?.customType !== "ponytail-mode") continue;
 
-    const mode = normalizePersistedMode(entry?.data?.mode);
+    const mode = normalizeMode(entry?.data?.mode);
     if (mode) return mode;
   }
 
@@ -45,7 +44,7 @@ export function resolveSessionMode(entries, fallbackMode = DEFAULT_MODE) {
 }
 
 export function parsePonytailCommand(text, defaultMode = DEFAULT_MODE, currentMode = null) {
-  const fallback = normalizePersistedMode(defaultMode) || DEFAULT_MODE;
+  const fallback = normalizeMode(defaultMode) || DEFAULT_MODE;
   const normalizedText = String(text || "").trim().toLowerCase();
 
   if (!normalizedText) {
@@ -59,7 +58,6 @@ export function parsePonytailCommand(text, defaultMode = DEFAULT_MODE, currentMo
   if (primary === "status") return { type: "status" };
 
   if (primary === "default") {
-    // ponytail: a default must be a runtime level; review is session-only (#377).
     const mode = normalizeMode(secondary);
     return mode ? { type: "set-default", mode } : { type: "invalid", reason: "invalid-default-mode" };
   }
@@ -99,29 +97,13 @@ export default function ponytailExtension(pi) {
   }
 
   const setMode = (mode, ctx) => {
-    const normalized = normalizePersistedMode(mode);
+    const normalized = normalizeMode(mode);
     if (!normalized) return;
 
     currentMode = normalized;
     pi.appendEntry("ponytail-mode", { mode: normalized });
     syncStatus(ctx);
     ctx?.ui?.notify?.(`Ponytail mode set to ${normalized}.`, "info");
-  };
-
-  const sendAlias = (skillName, args, ctx) => {
-    const normalized = String(args || "").trim();
-    const message = normalized ? `${skillName} ${normalized}` : skillName;
-
-    // pi.sendUserMessage does not expand skill commands on its own, so without
-    // expandPromptTemplates the alias lands as the literal text
-    // "/skill:ponytail-review" and the skill body never reaches the agent.
-    if (ctx?.isIdle?.() === false) {
-      pi.sendUserMessage(message, { expandPromptTemplates: true, deliverAs: "followUp" });
-      ctx?.ui?.notify?.(`${skillName} queued as follow-up.`, "info");
-      return;
-    }
-
-    pi.sendUserMessage(message, { expandPromptTemplates: true });
   };
 
   pi.registerCommand("ponytail", {
@@ -158,31 +140,6 @@ export default function ponytailExtension(pi) {
 
       ctx?.ui?.notify?.("Unknown or unsupported /ponytail mode.", "warning");
     },
-  });
-
-  pi.registerCommand("ponytail-review", {
-    description: "Run /skill:ponytail-review",
-    handler: (args, ctx) => sendAlias("/skill:ponytail-review", args, ctx),
-  });
-
-  pi.registerCommand("ponytail-audit", {
-    description: "Run /skill:ponytail-audit",
-    handler: (args, ctx) => sendAlias("/skill:ponytail-audit", args, ctx),
-  });
-
-  pi.registerCommand("ponytail-gain", {
-    description: "Run /skill:ponytail-gain",
-    handler: (args, ctx) => sendAlias("/skill:ponytail-gain", args, ctx),
-  });
-
-  pi.registerCommand("ponytail-debt", {
-    description: "Run /skill:ponytail-debt",
-    handler: (args, ctx) => sendAlias("/skill:ponytail-debt", args, ctx),
-  });
-
-  pi.registerCommand("ponytail-help", {
-    description: "Run /skill:ponytail-help",
-    handler: (args, ctx) => sendAlias("/skill:ponytail-help", args, ctx),
   });
 
   pi.on("input", async (event, ctx) => {
